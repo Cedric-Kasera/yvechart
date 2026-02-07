@@ -104,14 +104,6 @@ export default function SignupPage() {
     }
   };
 
-  const handleGoogleClick = () => {
-    toast.error('Google signup is not implemented yet. Please use email and password to sign up.');
-  };
-
-   const handleAppleClick = () => {
-    toast.error('Apple signup is not implemented yet. Please use email and password to sign up.');
-  };
-
   const isFormValid =
     username &&
     email &&
@@ -205,7 +197,7 @@ export default function SignupPage() {
           {loading ? 'Creating Account...' : 'Create Account'}
         </button>
 
-        <OAuthButtons onAppleClick={handleAppleClick} onGoogleClick={handleGoogleClick} />
+        <OAuthButtons />
 
         <div className="text-center text-sm text-gray-600">
           Already have an account?{' '}
