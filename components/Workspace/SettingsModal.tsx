@@ -548,7 +548,10 @@ export default function SettingsModal({
 
       /* ═══════ ACCOUNT ═══════ */
       case "account": {
-        const storedWorkspace = typeof window !== "undefined" ? localStorage.getItem("yve_workspace") : null;
+        const storedWorkspace =
+          typeof window !== "undefined"
+            ? localStorage.getItem("yve_workspace")
+            : null;
         const workspace = storedWorkspace ? JSON.parse(storedWorkspace) : null;
         const workspaceName = workspace?.name || "my workspace";
         const confirmPhrase = `sudo delete workspace ${workspaceName}`;
@@ -640,7 +643,7 @@ export default function SettingsModal({
                         try {
                           await deleteWorkspace(token);
                           clearAuth();
-                          router.push("/auth/login");
+                          router.replace("/auth/login");
                         } catch {
                           console.error("Failed to delete workspace");
                         } finally {
