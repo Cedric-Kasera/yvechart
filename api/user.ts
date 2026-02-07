@@ -36,3 +36,11 @@ export async function deleteProfile(token: string) {
   });
   return res.json();
 }
+
+export async function deleteWorkspace(token: string) {
+  const res = await fetch(`${BASE_URL}/auth/workspace`, {
+    method: "DELETE",
+    headers: authHeaders(token),
+  });
+  return res.json();
+}

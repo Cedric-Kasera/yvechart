@@ -95,8 +95,6 @@ export default function SignupPage() {
         return;
       }
 
-      console.log("Signup response:", res);
-
       setAuth(res.data.user, res.data.token);
       toast.success(res.message || 'Account created successfully');
       router.push('/u/workspace/create');

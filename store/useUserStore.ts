@@ -48,6 +48,7 @@ const useUserStore = create<UserState>((set) => ({
   clearAuth: () => {
     localStorage.removeItem("yve_user");
     localStorage.removeItem("yve_token");
+    localStorage.removeItem("yve_workspace");
     set({ user: null, token: null });
   },
 

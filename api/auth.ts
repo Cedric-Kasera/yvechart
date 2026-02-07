@@ -43,3 +43,11 @@ export async function resetPassword(data: { token: string; password: string }) {
   });
   return res.json();
 }
+
+export async function activateAccount(token: string) {
+  const res = await fetch(`${BASE_URL}/auth/activate/${token}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+  return res.json();
+}

@@ -72,8 +72,6 @@ export default function LoginPage() {
         return;
       }
 
-      console.log("Login response:", res);
-
       setAuth(res.data.user, res.data.token);
       toast.success(res.message || "Login successful");
 

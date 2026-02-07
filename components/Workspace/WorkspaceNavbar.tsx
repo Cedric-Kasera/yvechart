@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import useUserStore from "@/store/useUserStore";
 import {
   MagnifyingGlassIcon,
   UserIcon,
@@ -16,7 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import SearchModal from "./SearchModal";
 import SettingsModal from "./SettingsModal";
 
-type SettingsTab = "profile" | "settings" | "upgrade" | "help";
+type SettingsTab = "profile" | "settings" | "upgrade" | "help" | "account";
 
 export default function WorkspaceNavbar() {
   const params = useParams();
@@ -41,10 +42,13 @@ export default function WorkspaceNavbar() {
     setIsDropdownOpen(false);
   };
 
+  const router = useRouter();
+  const { clearAuth } = useUserStore();
+
   const handleLogout = () => {
     setIsDropdownOpen(false);
-    // Add logout logic here
-    console.log("Logging out...");
+    clearAuth();
+    router.replace("/auth/login");
   };
 
   useEffect(() => {
@@ -183,7 +187,7 @@ export default function WorkspaceNavbar() {
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         activeTab={activeSettingsTab}
-        onTabChange={setActiveSettingsTab}
+        onTabChange={(tab) => setActiveSettingsTab(tab)}
       />
     </>
   );

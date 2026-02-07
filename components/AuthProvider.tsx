@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import useUserStore from "@/store/useUserStore";
 
 const PUBLIC_ROUTES = ["/", "/auth/signup", "/auth/login"];
+const PUBLIC_PREFIXES = ["/auth/activate"];
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -21,7 +22,9 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     if (!isHydrated) return;
 
-    const isPublic = PUBLIC_ROUTES.includes(pathname);
+    const isPublic =
+      PUBLIC_ROUTES.includes(pathname) ||
+      PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
     if (!token && !isPublic) {
       router.replace("/");

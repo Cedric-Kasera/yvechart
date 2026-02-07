@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import {
   UserIcon,
   Cog6ToothIcon,
@@ -16,9 +17,13 @@ import {
   KeyIcon,
   CheckIcon,
   ShieldCheckIcon,
+  ExclamationTriangleIcon,
+  UserCircleIcon,
 } from "@heroicons/react/24/outline";
+import { deleteWorkspace } from "@/api/user";
+import useUserStore from "@/store/useUserStore";
 
-type SettingsTab = "profile" | "settings" | "upgrade" | "help";
+type SettingsTab = "profile" | "settings" | "upgrade" | "help" | "account";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -36,6 +41,7 @@ const tabs = [
     label: "Help & Support",
     icon: QuestionMarkCircleIcon,
   },
+  { id: "account" as SettingsTab, label: "Account", icon: UserCircleIcon },
 ];
 
 const accentColors = [
@@ -139,6 +145,11 @@ export default function SettingsModal({
   );
   const [selectedAccent, setSelectedAccent] = useState("#F15757");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteInput, setDeleteInput] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const router = useRouter();
+  const { token, clearAuth } = useUserStore();
 
   if (!isOpen) return null;
 
@@ -534,6 +545,143 @@ export default function SettingsModal({
             </div>
           </div>
         );
+
+      /* ═══════ ACCOUNT ═══════ */
+      case "account": {
+        const storedWorkspace = typeof window !== "undefined" ? localStorage.getItem("yve_workspace") : null;
+        const workspace = storedWorkspace ? JSON.parse(storedWorkspace) : null;
+        const workspaceName = workspace?.name || "my workspace";
+        const confirmPhrase = `sudo delete workspace ${workspaceName}`;
+        const inputMatches = deleteInput.trim() === confirmPhrase;
+
+        return (
+          <div className="p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-5">
+              Account
+            </h2>
+
+            <SectionTitle>Danger Zone</SectionTitle>
+
+            <div className="mt-3 rounded-xl border border-red-200 bg-red-50/50 p-5">
+              <div className="flex items-start gap-3">
+                <ExclamationTriangleIcon className="w-5 h-5 text-red-500 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-gray-900 mb-1">
+                    Delete Workspace
+                  </p>
+                  <p className="text-xs text-gray-500 leading-relaxed mb-4">
+                    This will permanently delete your workspace, all projects,
+                    and associated data. This action cannot be undone.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setDeleteInput("");
+                      setShowDeleteDialog(true);
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors cursor-pointer"
+                  >
+                    Delete Workspace
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Delete Confirmation Dialog */}
+            {showDeleteDialog && (
+              <div className="fixed inset-0 z-70 flex items-center justify-center">
+                <div
+                  className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                  onClick={() => !isDeleting && setShowDeleteDialog(false)}
+                />
+                <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                      <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900">
+                        Confirm Deletion
+                      </h3>
+                      <p className="text-xs text-gray-500">
+                        This action is irreversible
+                      </p>
+                    </div>
+                  </div>
+
+                  <p className="text-sm text-gray-600 mb-4">
+                    To confirm, type{" "}
+                    <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded text-red-600 select-all">
+                      {confirmPhrase}
+                    </span>{" "}
+                    below:
+                  </p>
+
+                  <input
+                    type="text"
+                    value={deleteInput}
+                    onChange={(e) => setDeleteInput(e.target.value)}
+                    placeholder={confirmPhrase}
+                    disabled={isDeleting}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-red-500 focus:border-transparent mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+
+                  <div className="flex items-center justify-end gap-3">
+                    <button
+                      onClick={() => setShowDeleteDialog(false)}
+                      disabled={isDeleting}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (!inputMatches || !token) return;
+                        setIsDeleting(true);
+                        try {
+                          await deleteWorkspace(token);
+                          clearAuth();
+                          router.push("/auth/login");
+                        } catch {
+                          console.error("Failed to delete workspace");
+                        } finally {
+                          setIsDeleting(false);
+                          setShowDeleteDialog(false);
+                        }
+                      }}
+                      disabled={!inputMatches || isDeleting}
+                      className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      {isDeleting && (
+                        <svg
+                          className="w-4 h-4 animate-spin"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                          />
+                        </svg>
+                      )}
+                      {isDeleting ? "Deleting..." : "Delete Workspace"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      }
 
       default:
         return null;
