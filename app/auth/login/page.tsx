@@ -83,7 +83,7 @@ export default function LoginPage() {
     } catch {
       toast.error("Something went wrong. Please try again.");
     } finally {
-      setLoading(true);
+      setLoading(false);
     }
   };
 

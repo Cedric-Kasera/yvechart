@@ -78,6 +78,7 @@ export default function SignupPage() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!validateForm()) return;
 
     setLoading(true);
@@ -94,13 +95,15 @@ export default function SignupPage() {
         return;
       }
 
+      console.log("Response: ", res.data);
+
       setAuth(res.data.user, res.data.token);
       toast.success(res.message || 'Account created successfully');
       router.push('/u/workspace/create');
     } catch {
       toast.error('Something went wrong. Please try again.');
     } finally {
-      setLoading(true);
+      setLoading(false);
     }
   };
 

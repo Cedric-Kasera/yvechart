@@ -3,14 +3,14 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { activateAccount } from "@/api/auth";
 
 type ActivationStatus = "loading" | "success" | "error";
 
 export default function ActivatePage() {
-  const params = useParams();
-  const token = params.token as string;
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
 
   const [status, setStatus] = useState<ActivationStatus>("loading");
   const [errorMessage, setErrorMessage] = useState("");
