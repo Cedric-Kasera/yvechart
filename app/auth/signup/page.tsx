@@ -78,7 +78,6 @@ export default function SignupPage() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
     if (!validateForm()) return;
 
     setLoading(true);
@@ -103,6 +102,14 @@ export default function SignupPage() {
     } finally {
       setLoading(true);
     }
+  };
+
+  const handleGoogleClick = () => {
+    toast.error('Google signup is not implemented yet. Please use email and password to sign up.');
+  };
+
+   const handleAppleClick = () => {
+    toast.error('Apple signup is not implemented yet. Please use email and password to sign up.');
   };
 
   const isFormValid =
@@ -198,7 +205,7 @@ export default function SignupPage() {
           {loading ? 'Creating Account...' : 'Create Account'}
         </button>
 
-        <OAuthButtons />
+        <OAuthButtons onAppleClick={handleAppleClick} onGoogleClick={handleGoogleClick} />
 
         <div className="text-center text-sm text-gray-600">
           Already have an account?{' '}
