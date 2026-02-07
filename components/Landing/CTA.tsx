@@ -3,8 +3,10 @@ import { ArrowRightIcon } from "@heroicons/react/24/outline";
 
 export default function CTA() {
   return (
-    <section className="bg-white py-24 sm:py-32">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="relative bg-white py-24 sm:py-32">
+      {/* Grid lines background */}
+      <div className="absolute inset-0 bg-grid-lines opacity-[0.45]" />
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="relative isolate overflow-hidden bg-gray-900 px-6 py-24 text-center shadow-2xl sm:rounded-3xl sm:px-16">
           <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-white sm:text-4xl">
             Ready to visualize your architecture?
@@ -16,15 +18,15 @@ export default function CTA() {
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <Link
               href="/signup"
-              className="rounded-lg bg-primary-500 px-6 py-3 text-sm font-bold text-white shadow-sm hover:bg-primary-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-colors flex items-center gap-2"
+              className="rounded-lg bg-primary-500 px-6 py-3 text-sm text-white shadow-sm hover:bg-primary-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-colors flex items-center gap-2"
             >
               Get started for free <ArrowRightIcon className="h-4 w-4" />
             </Link>
             <Link
               href="/pricing"
-              className="text-sm font-semibold leading-6 text-white hover:text-gray-200"
+              className="text-sm leading-6 text-white hover:text-gray-200 flex items-center gap-2"
             >
-              Check pricing <span aria-hidden="true">→</span>
+              Check pricing <ArrowRightIcon className="h-4 w-4" />
             </Link>
           </div>
 

@@ -271,6 +271,16 @@
 }
 
 /* =========================================================
+   LANDING PAGE GRID LINES (Tailwind-style)
+========================================================= */
+.bg-grid-lines {
+  background-image:
+    linear-gradient(to right, var(--color-gray-200) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-gray-200) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+/* =========================================================
    GLOBAL ELEMENT STYLES
 ========================================================= */
 body {

@@ -4,9 +4,22 @@ import Link from "next/link";
 import Image from "next/image";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const handleHashLink = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    hash: string,
+  ) => {
+    if (pathname !== "/") {
+      e.preventDefault();
+      router.push(`/${hash}`);
+    }
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-gray-200 bg-bg-surface/80 backdrop-blur-md">
@@ -27,21 +40,30 @@ export default function Navbar() {
         <div className="hidden md:flex md:items-center md:gap-8">
           <Link
             href="#features"
+            onClick={(e) => handleHashLink(e, "#features")}
             className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors"
           >
             Features
           </Link>
           <Link
             href="#how-it-works"
+            onClick={(e) => handleHashLink(e, "#how-it-works")}
             className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors"
           >
             How it Works
           </Link>
           <Link
             href="#pricing"
+            onClick={(e) => handleHashLink(e, "#pricing")}
             className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors"
           >
             Pricing
+          </Link>
+          <Link
+            href="/c/community"
+            className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors"
+          >
+            Community
           </Link>
         </div>
 
@@ -80,27 +102,50 @@ export default function Navbar() {
             <Link
               href="#features"
               className="text-base font-medium text-gray-600 hover:text-primary-600"
-              onClick={() => setIsMenuOpen(false)}
+              onClick={(e) => {
+                handleHashLink(e, "#features");
+                setIsMenuOpen(false);
+              }}
             >
               Features
             </Link>
             <Link
               href="#how-it-works"
               className="text-base font-medium text-gray-600 hover:text-primary-600"
-              onClick={() => setIsMenuOpen(false)}
+              onClick={(e) => {
+                handleHashLink(e, "#how-it-works");
+                setIsMenuOpen(false);
+              }}
             >
               How it Works
             </Link>
+            <Link
+              href="#pricing"
+              className="text-base font-medium text-gray-600 hover:text-primary-600"
+              onClick={(e) => {
+                handleHashLink(e, "#pricing");
+                setIsMenuOpen(false);
+              }}
+            >
+              Pricing
+            </Link>
+            <Link
+              href="/c/community"
+              className="text-base font-medium text-gray-600 hover:text-primary-600"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Community
+            </Link>
             <div className="border-t border-gray-100 pt-4 mt-2 flex flex-col gap-3">
               <Link
-                href="/login"
+                href="/auth/login"
                 className="text-base font-medium text-gray-900 hover:text-primary-600"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Log in
               </Link>
               <Link
-                href="/signup"
+                href="/auth/signup"
                 className="flex items-center justify-center rounded-lg bg-primary-500 px-4 py-2 text-base font-medium text-white hover:bg-primary-600 transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >

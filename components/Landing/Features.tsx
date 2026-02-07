@@ -48,8 +48,13 @@ const features = [
 
 export default function Features() {
   return (
-    <section id="features" className="bg-white py-24 sm:py-32">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section id="features" className="relative bg-white py-24 sm:py-32">
+      {/* Grid lines background */}
+      <div className="absolute inset-0 bg-grid-lines opacity-[0.45]" />
+      {/* Dot grid background */}
+      <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[24px_24px] opacity-30" />
+
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-base font-semibold leading-7 text-primary-600">
             Everything you need

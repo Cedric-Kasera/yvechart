@@ -19,11 +19,16 @@ import {
   ShieldCheckIcon,
   ExclamationTriangleIcon,
   UserCircleIcon,
+  ArrowLeftIcon,
+  PaperAirplaneIcon,
 } from "@heroicons/react/24/outline";
+import { StarIcon as StarOutline } from "@heroicons/react/24/outline";
+import { StarIcon as StarSolid } from "@heroicons/react/24/solid";
 import { deleteWorkspace } from "@/api/user";
 import useUserStore from "@/store/useUserStore";
 
 type SettingsTab = "profile" | "settings" | "upgrade" | "help" | "account";
+type HelpSubView = null | "contact" | "bug" | "feedback" | "changelog" | "docs";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -148,6 +153,16 @@ export default function SettingsModal({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteInput, setDeleteInput] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Help sub-view state
+  const [helpSubView, setHelpSubView] = useState<HelpSubView>(null);
+  const [contactFrom, setContactFrom] = useState("");
+  const [contactSubject, setContactSubject] = useState("");
+  const [contactMessage, setContactMessage] = useState("");
+  const [bugType, setBugType] = useState("");
+  const [bugDetails, setBugDetails] = useState("");
+  const [feedbackRating, setFeedbackRating] = useState(0);
+  const [feedbackMessage, setFeedbackMessage] = useState("");
   const router = useRouter();
   const { token, clearAuth } = useUserStore();
 
@@ -473,61 +488,548 @@ export default function SettingsModal({
         );
 
       /* ═══════ HELP & SUPPORT ═══════ */
-      case "help":
+      case "help": {
+        const resetHelpSubView = () => {
+          setHelpSubView(null);
+          setContactFrom("");
+          setContactSubject("");
+          setContactMessage("");
+          setBugType("");
+          setBugDetails("");
+          setFeedbackRating(0);
+          setFeedbackMessage("");
+        };
+
+        const BackButton = () => (
+          <button
+            onClick={resetHelpSubView}
+            className="p-1.5 -ml-1 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+          >
+            <ArrowLeftIcon className="w-4 h-4" />
+          </button>
+        );
+
+        /* ─── Contact Support ─── */
+        if (helpSubView === "contact") {
+          const contactToEmail = "stickrhive@gmail.com";
+          const isContactValid =
+            contactFrom.trim() !== "" && contactMessage.trim() !== "";
+
+          return (
+            <div className="p-6">
+              <div className="flex items-center gap-2 mb-5">
+                <BackButton />
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Contact Support
+                </h2>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    From
+                  </label>
+                  <input
+                    type="email"
+                    value={contactFrom}
+                    onChange={(e) => setContactFrom(e.target.value)}
+                    placeholder="your@email.com"
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    To
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="email"
+                      value={contactToEmail}
+                      readOnly
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed pr-9"
+                    />
+                    <EnvelopeIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    RE:
+                  </label>
+                  <input
+                    type="text"
+                    value={contactSubject}
+                    onChange={(e) => setContactSubject(e.target.value)}
+                    placeholder="Subject"
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Message
+                  </label>
+                  <div className="relative">
+                    <textarea
+                      value={contactMessage}
+                      onChange={(e) =>
+                        e.target.value.length <= 150 &&
+                        setContactMessage(e.target.value)
+                      }
+                      placeholder="How can we help?"
+                      rows={4}
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                    />
+                    <span className="absolute bottom-2 right-3 text-xs text-gray-400">
+                      {contactMessage.length}/150
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    disabled={!isContactValid}
+                    className="flex items-center gap-2 px-5 py-2 bg-primary-500 text-white text-sm rounded-lg hover:bg-primary-600 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <PaperAirplaneIcon className="w-4 h-4" />
+                    Send Message
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        /* ─── Report a Bug ─── */
+        if (helpSubView === "bug") {
+          const bugTypes = [
+            { label: "Select a bug type", value: "" },
+            { label: "UI / Visual Issue", value: "ui" },
+            { label: "Crash / Freeze", value: "crash" },
+            { label: "Data Loss", value: "data-loss" },
+            { label: "Performance", value: "performance" },
+            { label: "Authentication", value: "auth" },
+            { label: "Other", value: "other" },
+          ];
+          const isBugValid = bugType.trim() !== "" && bugDetails.trim() !== "";
+
+          return (
+            <div className="p-6">
+              <div className="flex items-center gap-2 mb-5">
+                <BackButton />
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Report a Bug
+                </h2>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Bug Type
+                  </label>
+                  <select
+                    value={bugType}
+                    onChange={(e) => setBugType(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent cursor-pointer"
+                  >
+                    {bugTypes.map((opt) => (
+                      <option
+                        key={opt.value}
+                        value={opt.value}
+                        disabled={opt.value === ""}
+                      >
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Details
+                  </label>
+                  <div className="relative">
+                    <textarea
+                      value={bugDetails}
+                      onChange={(e) =>
+                        e.target.value.length <= 150 &&
+                        setBugDetails(e.target.value)
+                      }
+                      placeholder="Describe the bug..."
+                      rows={4}
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                    />
+                    <span className="absolute bottom-2 right-3 text-xs text-gray-400">
+                      {bugDetails.length}/150
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    disabled={!isBugValid}
+                    className="flex items-center gap-2 px-5 py-2 bg-primary-500 text-white text-sm rounded-lg hover:bg-primary-600 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <BugAntIcon className="w-4 h-4" />
+                    Submit Report
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        /* ─── Feedback ─── */
+        if (helpSubView === "feedback") {
+          const isFeedbackValid =
+            feedbackRating > 0 || feedbackMessage.trim() !== "";
+
+          return (
+            <div className="p-6">
+              <div className="flex items-center gap-2 mb-5">
+                <BackButton />
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Feedback
+                </h2>
+              </div>
+
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    How would you rate your experience?
+                  </label>
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => setFeedbackRating(star)}
+                        className="cursor-pointer transition-transform hover:scale-110"
+                      >
+                        {star <= feedbackRating ? (
+                          <StarSolid className="w-8 h-8 text-amber-400" />
+                        ) : (
+                          <StarOutline className="w-8 h-8 text-gray-300 hover:text-amber-300" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Message
+                  </label>
+                  <div className="relative">
+                    <textarea
+                      value={feedbackMessage}
+                      onChange={(e) =>
+                        e.target.value.length <= 150 &&
+                        setFeedbackMessage(e.target.value)
+                      }
+                      placeholder="Tell us what you think..."
+                      rows={4}
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                    />
+                    <span className="absolute bottom-2 right-3 text-xs text-gray-400">
+                      {feedbackMessage.length}/150
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    disabled={!isFeedbackValid}
+                    className="flex items-center gap-2 px-5 py-2 bg-primary-500 text-white text-sm rounded-lg hover:bg-primary-600 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <PaperAirplaneIcon className="w-4 h-4" />
+                    Submit Feedback
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        /* ─── Documentation ─── */
+        if (helpSubView === "docs") {
+          const docSections = [
+            {
+              heading: "1. Introduction",
+              content:
+                "YveChart is a visual architecture design tool that lets you map out system architectures using an interactive drag-and-drop canvas. Create workspaces, organize projects, and export publication-ready diagrams — all from your browser.",
+            },
+            {
+              heading: "2. Getting Started",
+              sub: [
+                {
+                  heading: "2.1 Creating a Workspace",
+                  content:
+                    "After signing up and activating your account, you'll be prompted to create a workspace. Give it a name — this is your home for all architecture projects.",
+                },
+                {
+                  heading: "2.2 Creating a Project",
+                  content:
+                    'Click the \"New Project\" button on your workspace dashboard. Enter a project name (required) and an optional description (max 100 characters), then hit Create.',
+                },
+              ],
+            },
+            {
+              heading: "3. Canvas",
+              sub: [
+                {
+                  heading: "3.1 Nodes & Edges",
+                  content:
+                    "Nodes represent services, databases, users, and other components. Edges are the connections between them. Together they form your architecture diagram.",
+                },
+                {
+                  heading: "3.2 Drag-and-Drop",
+                  content:
+                    "Drag node types from the left sidebar and drop them onto the canvas to add new components. Reposition existing nodes by dragging them to a new location.",
+                },
+                {
+                  heading: "3.3 Connecting Nodes",
+                  content:
+                    "Hover over a node to reveal its connection handles. Click and drag from a handle to another node's handle to create an edge between them.",
+                },
+                {
+                  heading: "3.4 Deleting Nodes & Edges",
+                  content:
+                    "Select a node or edge by clicking on it, then press the Backspace key to remove it from the canvas.",
+                },
+                {
+                  heading: "3.5 Node Configuration",
+                  content:
+                    "Double-click a node to open its configuration dialog where you can edit its label, type, and other properties.",
+                },
+              ],
+            },
+            {
+              heading: "4. Saving & Exporting",
+              sub: [
+                {
+                  heading: "4.1 Save Project",
+                  content:
+                    'Click the \"Save & Export\" dropdown in the header and select \"Save Project\" to persist your canvas changes to the server. The save button is only active when unsaved changes exist.',
+                },
+                {
+                  heading: "4.2 Export to PNG",
+                  content:
+                    'Select \"Download PNG\" from the same dropdown to export your diagram as a high-resolution PNG image.',
+                },
+                {
+                  heading: "4.3 Unsaved Changes Guard",
+                  content:
+                    "Navigating away or closing the tab with unsaved changes will trigger a confirmation dialog, giving you the option to save, discard, or cancel.",
+                },
+              ],
+            },
+            {
+              heading: "5. Keyboard Shortcuts",
+              content:
+                "⌘K / Ctrl+K — Open quick search. Backspace — Delete selected node or edge. Standard browser shortcuts (Ctrl+Z, Ctrl+Y) work for undo/redo where supported.",
+            },
+          ];
+
+          return (
+            <div className="p-6">
+              <div className="flex items-center gap-2 mb-5">
+                <BackButton />
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Documentation
+                </h2>
+              </div>
+
+              <p className="text-sm text-gray-500 mb-6">
+                Everything you need to know to get the most out of YveChart.
+              </p>
+
+              <div className="space-y-5">
+                {docSections.map((section) => (
+                  <div key={section.heading}>
+                    <h3 className="text-sm font-semibold text-gray-900 mb-1.5">
+                      {section.heading}
+                    </h3>
+                    {section.content && (
+                      <p className="text-xs text-gray-500 leading-relaxed mb-3">
+                        {section.content}
+                      </p>
+                    )}
+                    {section.sub && (
+                      <div className="space-y-3 pl-3 border-l-2 border-gray-100">
+                        {section.sub.map((sub) => (
+                          <div key={sub.heading}>
+                            <h4 className="text-[13px] font-medium text-gray-800 mb-1">
+                              {sub.heading}
+                            </h4>
+                            <p className="text-xs text-gray-500 leading-relaxed">
+                              {sub.content}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        }
+
+        /* ─── What's New (Changelog) ─── */
+        if (helpSubView === "changelog") {
+          return (
+            <div className="p-6">
+              <div className="flex items-center gap-2 mb-5">
+                <BackButton />
+                <h2 className="text-lg font-semibold text-gray-900">
+                  What&apos;s New
+                </h2>
+              </div>
+
+              <p className="text-sm text-gray-500 mb-6">
+                Stay up to date with the latest changes, features, and
+                improvements to YveChart.
+              </p>
+
+              {/* v1.0.0 */}
+              <div className="rounded-xl border border-gray-200 p-5">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="px-2.5 py-0.5 bg-primary-100 text-primary-700 rounded-full text-xs font-semibold">
+                    v1.0.0
+                  </span>
+                  <span className="text-xs text-gray-400">Initial Release</span>
+                </div>
+
+                <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-1.5">
+                  <SparklesIcon className="w-4 h-4 text-primary-500" />
+                  Features
+                </h4>
+
+                <ul className="space-y-2.5">
+                  {[
+                    {
+                      title: "Visual Architecture Canvas",
+                      desc: "Drag-and-drop editor for designing system architectures with nodes and edges.",
+                    },
+                    {
+                      title: "Workspace Management",
+                      desc: "Create and manage workspaces to organize your architecture projects.",
+                    },
+                    {
+                      title: "Project CRUD",
+                      desc: "Create, view, update, and delete architecture projects within a workspace.",
+                    },
+                    {
+                      title: "Auto-save & Change Detection",
+                      desc: "Tracks unsaved canvas changes with save prompts before navigating away.",
+                    },
+                    {
+                      title: "PNG Export",
+                      desc: "Download your architecture diagrams as high-quality PNG images.",
+                    },
+                    {
+                      title: "Authentication & Activation",
+                      desc: "Secure sign-up, email activation, login, and password reset flows.",
+                    },
+                    {
+                      title: "User Profile & Settings",
+                      desc: "Customizable profile, appearance, editor preferences, and notification controls.",
+                    },
+                    {
+                      title: "Keyboard Shortcuts",
+                      desc: "Quick search with ⌘K and streamlined navigation across the app.",
+                    },
+                  ].map((feature) => (
+                    <li
+                      key={feature.title}
+                      className="flex items-start gap-2.5"
+                    >
+                      <CheckIcon className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {feature.title}
+                        </p>
+                        <p className="text-xs text-gray-500 leading-relaxed">
+                          {feature.desc}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          );
+        }
+
+        /* ─── Default help grid ─── */
+        const helpItems: {
+          icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+          label: string;
+          desc: string;
+          action?: () => void;
+        }[] = [
+          {
+            icon: BookOpenIcon,
+            label: "Documentation",
+            desc: "Guides & tutorials",
+            action: () => setHelpSubView("docs"),
+          },
+          {
+            icon: EnvelopeIcon,
+            label: "Contact Support",
+            desc: "Get in touch",
+            action: () => setHelpSubView("contact"),
+          },
+          {
+            icon: UserGroupIcon,
+            label: "Community",
+            desc: "Join the forum",
+            action: () => router.push("/c/community"),
+          },
+          {
+            icon: BugAntIcon,
+            label: "Report a Bug",
+            desc: "Help us improve",
+            action: () => setHelpSubView("bug"),
+          },
+          {
+            icon: ChatBubbleLeftEllipsisIcon,
+            label: "Feedback",
+            desc: "Share your ideas",
+            action: () => setHelpSubView("feedback"),
+          },
+          {
+            icon: ShieldCheckIcon,
+            label: "Privacy",
+            desc: "Data & security",
+            action: () => router.push("/privacy"),
+          },
+          {
+            icon: KeyIcon,
+            label: "API & Integrations",
+            desc: "Developer docs",
+          },
+          {
+            icon: SparklesIcon,
+            label: "What's New",
+            desc: "Changelog & updates",
+            action: () => setHelpSubView("changelog"),
+          },
+        ];
+
         return (
           <div className="p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-5">
               Help & Support
             </h2>
             <div className="grid grid-cols-2 gap-3">
-              {(
-                [
-                  {
-                    icon: BookOpenIcon,
-                    label: "Documentation",
-                    desc: "Guides & tutorials",
-                  },
-                  {
-                    icon: EnvelopeIcon,
-                    label: "Contact Support",
-                    desc: "Get in touch",
-                  },
-                  {
-                    icon: UserGroupIcon,
-                    label: "Community",
-                    desc: "Join the forum",
-                  },
-                  {
-                    icon: BugAntIcon,
-                    label: "Report a Bug",
-                    desc: "Help us improve",
-                  },
-                  {
-                    icon: ChatBubbleLeftEllipsisIcon,
-                    label: "Feedback",
-                    desc: "Share your ideas",
-                  },
-                  {
-                    icon: ShieldCheckIcon,
-                    label: "Privacy",
-                    desc: "Data & security",
-                  },
-                  {
-                    icon: KeyIcon,
-                    label: "API & Integrations",
-                    desc: "Developer docs",
-                  },
-                  {
-                    icon: SparklesIcon,
-                    label: "What's New",
-                    desc: "Changelog & updates",
-                  },
-                ] as const
-              ).map((item) => {
+              {helpItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <button
                     key={item.label}
+                    onClick={item.action}
                     className="flex flex-col items-center justify-center gap-2 p-5 border border-gray-200 rounded-xl hover:border-primary-300 hover:bg-primary-50/50 transition-all cursor-pointer group"
                   >
                     <Icon className="w-6 h-6 text-gray-400 group-hover:text-primary-500 transition-colors" />
@@ -545,6 +1047,7 @@ export default function SettingsModal({
             </div>
           </div>
         );
+      }
 
       /* ═══════ ACCOUNT ═══════ */
       case "account": {

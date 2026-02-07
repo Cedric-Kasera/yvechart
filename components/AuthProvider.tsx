@@ -4,10 +4,22 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import useUserStore from "@/store/useUserStore";
 
-const PUBLIC_ROUTES = ["/", "/auth/signup", "/auth/login"];
+const PUBLIC_ROUTES = [
+  "/",
+  "/auth/signup",
+  "/auth/login",
+  "/auth/forgot-password",
+  "/privacy",
+  "/terms",
+  "/c/community",
+];
 const PUBLIC_PREFIXES = ["/auth/activate"];
 
-export default function AuthProvider({ children }: { children: React.ReactNode }) {
+export default function AuthProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const { token, isHydrated, hydrate } = useUserStore();

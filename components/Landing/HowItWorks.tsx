@@ -23,9 +23,14 @@ export default function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="bg-bg-canvas py-24 sm:py-32 border-t border-b border-gray-200"
+      className="relative bg-bg-canvas py-24 sm:py-32 border-t border-b border-gray-200"
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      {/* Grid lines background */}
+      <div className="absolute inset-0 bg-grid-lines opacity-[0.45]" />
+      {/* Dot grid background */}
+      <div className="absolute inset-0 bg-[radial-gradient(#d1d5db_1px,transparent_1px)] bg-size-[24px_24px] opacity-30" />
+
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center mb-16">
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             How YveChart works
