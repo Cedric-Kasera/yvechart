@@ -27,6 +27,9 @@ export const metadata: Metadata = {
     description: "Design System Architecture Visually",
     type: "website",
   },
+  icons: {
+    icon: "/yvechart_logo.svg",
+  }
 };
 
 export const viewport: Viewport = {

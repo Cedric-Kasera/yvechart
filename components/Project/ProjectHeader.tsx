@@ -16,6 +16,7 @@ import {
   getViewportForBounds,
 } from "@xyflow/react";
 import { toPng } from "html-to-image";
+import { toast } from "sonner";
 
 interface ProjectHeaderProps {
   projectName?: string;
@@ -229,7 +230,7 @@ export default function ProjectHeader({
 
         <button
           onClick={() => {
-            console.log("Simulating...");
+            toast.info("Simulation coming soon!", { duration: 3000 });
           }}
           className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-primary-500 rounded-lg hover:bg-primary-600 transition-colors cursor-pointer"
         >

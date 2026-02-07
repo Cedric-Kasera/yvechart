@@ -21,6 +21,7 @@ import { getNodeById, type ConfigField } from "@/lib/nodes";
 import { getArchitecture, saveArchitecture } from "@/api/project";
 import useUserStore from "@/store/useUserStore";
 import useProjectStore from "@/store/useProjectStore";
+import { toast } from "sonner";
 
 let nodeId = 0;
 const getId = () => `node_${nodeId++}`;
@@ -238,7 +239,7 @@ function ProjectPageInner() {
   }, []);
 
   const handleAIChat = () => {
-    console.log("Opening AI Chat");
+    toast.info("AI Chat coming soon!", { duration: 3000 });
   };
 
   return (
