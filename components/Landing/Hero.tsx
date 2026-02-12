@@ -38,7 +38,7 @@ export default function Hero() {
           <p className="mt-6 text-lg leading-8 text-gray-600 mb-10">
             Create, visualize, and document complex system architectures with
             our intuitive drag-and-drop canvas. Collaborate in real-time and
-            export to clean code.
+            export as clean diagrams.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link

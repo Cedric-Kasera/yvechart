@@ -16,12 +16,12 @@ import {
   getViewportForBounds,
 } from "@xyflow/react";
 import { toPng } from "html-to-image";
-import { toast } from "sonner";
 
 interface ProjectHeaderProps {
   projectName?: string;
   projectLogo?: string;
   onSave?: () => void;
+  onSimulate?: () => void;
   onAIChat?: () => void;
   onBack?: () => void;
   hasChanges?: boolean;
@@ -31,6 +31,7 @@ export default function ProjectHeader({
   projectName = "Untitled Project",
   projectLogo = "/default_logo.svg",
   onSave,
+  onSimulate,
   onAIChat,
   onBack,
   hasChanges = false,
@@ -229,9 +230,7 @@ export default function ProjectHeader({
         </button>
 
         <button
-          onClick={() => {
-            toast.info("Simulation coming soon!", { duration: 3000 });
-          }}
+          onClick={onSimulate}
           className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-primary-500 rounded-lg hover:bg-primary-600 transition-colors cursor-pointer"
         >
           <PlayIcon className="w-5 h-5 font-semibold" />

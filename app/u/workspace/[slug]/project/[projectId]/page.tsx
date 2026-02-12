@@ -17,6 +17,8 @@ import ProjectSidebar from "@/components/Project/ProjectSidebar";
 import ProjectCanvas from "@/components/Project/ProjectCanvas";
 import NodeConfigDialog from "@/components/Project/NodeConfigDialog";
 import UnsavedChangesModal from "@/components/Project/UnsavedChangesModal";
+import SimulationPanel from "@/components/Simulation/SimulationPanel";
+import type { SimulationResult } from "@/lib/simulation/types";
 import { getNodeById, type ConfigField } from "@/lib/nodes";
 import { getArchitecture, saveArchitecture } from "@/api/project";
 import useUserStore from "@/store/useUserStore";
@@ -42,6 +44,9 @@ function ProjectPageInner() {
 
   // Change-detection flag (recomputed every render)
   const canvasHasChanges = hasChanges(nodes, edges);
+
+  // Simulation panel state
+  const [showSimulation, setShowSimulation] = useState(false);
 
   // Unsaved-changes modal state
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
@@ -238,6 +243,46 @@ function ProjectPageInner() {
     pendingAction.current = null;
   }, []);
 
+  const handleSimulate = useCallback(() => {
+    setShowSimulation(true);
+  }, []);
+
+  /** Overlay simulation status on canvas nodes after a successful run */
+  const handleSimulationComplete = useCallback(
+    (result: SimulationResult) => {
+      const statusMap = new Map(
+        result.nodes.map((n) => [n.id, n.status]),
+      );
+
+      setNodes((prev) =>
+        prev.map((node) => {
+          const status = statusMap.get(node.id);
+          if (status) {
+            return {
+              ...node,
+              data: { ...node.data, simulationStatus: status },
+            };
+          }
+          return node;
+        }),
+      );
+    },
+    [setNodes],
+  );
+
+  /** Clear simulation overlay from canvas nodes */
+  const clearSimulationOverlay = useCallback(() => {
+    setNodes((prev) =>
+      prev.map((node) => {
+        if ((node.data as any).simulationStatus) {
+          const { simulationStatus, ...rest } = node.data as any;
+          return { ...node, data: rest };
+        }
+        return node;
+      }),
+    );
+  }, [setNodes]);
+
   const handleAIChat = () => {
     toast.info("AI Chat coming soon!", { duration: 3000 });
   };
@@ -248,6 +293,7 @@ function ProjectPageInner() {
         projectName={architecture?.name || "Project"}
         projectLogo={architecture?.logo_url || "/default_logo.svg"}
         onSave={handleSave}
+        onSimulate={handleSimulate}
         onAIChat={handleAIChat}
         onBack={handleBack}
         hasChanges={canvasHasChanges}
@@ -274,6 +320,18 @@ function ProjectPageInner() {
         nodeName={pendingNode?.label || ""}
         nodeIcon={pendingNode?.icon || ""}
         config={pendingNode?.config || []}
+      />
+
+      <SimulationPanel
+        isOpen={showSimulation}
+        onClose={() => {
+          setShowSimulation(false);
+          clearSimulationOverlay();
+        }}
+        architectureId={projectId}
+        nodes={nodes}
+        edges={edges}
+        onSimulationComplete={handleSimulationComplete}
       />
 
       <UnsavedChangesModal
