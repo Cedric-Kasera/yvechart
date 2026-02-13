@@ -12,8 +12,8 @@ const tiers = [
     href: "/auth/signup?plan=free",
     highlighted: false,
     features: [
-      "Up to 10 projects per workspace",
       "Unlimited workspaces",
+      "Up to 10 projects per workspace",
       "Drag-and-drop canvas",
       "PNG & JSON export",
       "Community support",

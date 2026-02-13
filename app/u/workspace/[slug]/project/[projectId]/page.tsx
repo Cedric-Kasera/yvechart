@@ -17,8 +17,12 @@ import ProjectSidebar from "@/components/Project/ProjectSidebar";
 import ProjectCanvas from "@/components/Project/ProjectCanvas";
 import NodeConfigDialog from "@/components/Project/NodeConfigDialog";
 import UnsavedChangesModal from "@/components/Project/UnsavedChangesModal";
+import SimulationPanel from "@/components/Simulation/SimulationPanel";
+import AiAssistPanel from "@/components/Project/AiAssistPanel";
+import type { SimulationResult } from "@/lib/simulation/types";
 import { getNodeById, type ConfigField } from "@/lib/nodes";
 import { getArchitecture, saveArchitecture } from "@/api/project";
+import { getAiCredits } from "@/api/ai";
 import useUserStore from "@/store/useUserStore";
 import useProjectStore from "@/store/useProjectStore";
 import { toast } from "sonner";
@@ -42,6 +46,15 @@ function ProjectPageInner() {
 
   // Change-detection flag (recomputed every render)
   const canvasHasChanges = hasChanges(nodes, edges);
+
+  // Simulation panel state
+  const [showSimulation, setShowSimulation] = useState(false);
+
+  // AI Assist panel state
+  const [showAiAssist, setShowAiAssist] = useState(false);
+
+  // Project loading state
+  const [isProjectLoading, setIsProjectLoading] = useState(true);
 
   // Unsaved-changes modal state
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
@@ -89,10 +102,27 @@ function ProjectPageInner() {
         }
       } catch (error) {
         console.error("Failed to fetch project:", error);
+      } finally {
+        setIsProjectLoading(false);
       }
     };
 
     fetchProject();
+
+    // Sync AI credits with the database
+    const syncCredits = async () => {
+      if (!token) return;
+      try {
+        const credits = await getAiCredits(token);
+        const currentUser = useUserStore.getState().user;
+        if (currentUser && currentUser.ai_credits !== credits) {
+          useUserStore.getState().setUser({ ...currentUser, ai_credits: credits });
+        }
+      } catch (error) {
+        console.error("Failed to sync AI credits:", error);
+      }
+    };
+    syncCredits();
 
     return () => {
       clearProject();
@@ -238,19 +268,101 @@ function ProjectPageInner() {
     pendingAction.current = null;
   }, []);
 
+  const handleSimulate = useCallback(() => {
+    setShowSimulation(true);
+  }, []);
+
+  /** Overlay simulation status on canvas nodes after a successful run */
+  const handleSimulationComplete = useCallback(
+    (result: SimulationResult) => {
+      const statusMap = new Map(result.nodes.map((n) => [n.id, n.status]));
+
+      setNodes((prev) =>
+        prev.map((node) => {
+          const status = statusMap.get(node.id);
+          if (status) {
+            return {
+              ...node,
+              data: { ...node.data, simulationStatus: status },
+            };
+          }
+          return node;
+        }),
+      );
+    },
+    [setNodes],
+  );
+
+  /** Clear simulation overlay from canvas nodes */
+  const clearSimulationOverlay = useCallback(() => {
+    setNodes((prev) =>
+      prev.map((node) => {
+        if ((node.data as any).simulationStatus) {
+          const { simulationStatus, ...rest } = node.data as any;
+          return { ...node, data: rest };
+        }
+        return node;
+      }),
+    );
+  }, [setNodes]);
+
   const handleAIChat = () => {
-    toast.info("AI Chat coming soon!", { duration: 3000 });
+    setShowAiAssist(true);
   };
+
+  /** Handle AI-generated architecture: replace canvas nodes & edges */
+  const handleArchitectureGenerated = useCallback(
+    (newNodes: Node[], newEdges: Edge[], message: string) => {
+      // Set node id counter past new IDs to avoid collisions
+      const maxNumericId = newNodes.reduce((max, n) => {
+        const match = n.id.match(/^node_(\d+)$/);
+        return match ? Math.max(max, parseInt(match[1], 10)) : max;
+      }, nodeId);
+      nodeId = maxNumericId + 1;
+
+      setNodes(newNodes);
+      setEdges(newEdges);
+      toast.success(message || "Architecture generated!", { duration: 4000 });
+    },
+    [setNodes, setEdges],
+  );
+
+  // ── Simulated rename project handler ──
+  const handleRenameProject = useCallback(async (newName: string) => {
+    // TODO: Replace with real API call
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Optimistically update the store
+    if (architecture) {
+      useProjectStore.getState().setProject(
+        { ...architecture, name: newName },
+        nodes,
+        edges,
+      );
+    }
+    toast.success("Project renamed successfully");
+  }, [architecture, nodes, edges]);
+
+  // ── Simulated delete project handler ──
+  const handleDeleteProject = useCallback(async () => {
+    // TODO: Replace with real API call
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    toast.success("Project deleted successfully");
+    router.back();
+  }, [router]);
 
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden">
       <ProjectHeader
-        projectName={architecture?.name || "Project"}
+        projectName={architecture?.name || "Project Name"}
         projectLogo={architecture?.logo_url || "/default_logo.svg"}
+        isLoading={isProjectLoading}
         onSave={handleSave}
+        onSimulate={handleSimulate}
         onAIChat={handleAIChat}
         onBack={handleBack}
         hasChanges={canvasHasChanges}
+        onRenameProject={handleRenameProject}
+        onDeleteProject={handleDeleteProject}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -274,6 +386,24 @@ function ProjectPageInner() {
         nodeName={pendingNode?.label || ""}
         nodeIcon={pendingNode?.icon || ""}
         config={pendingNode?.config || []}
+      />
+
+      <SimulationPanel
+        isOpen={showSimulation}
+        onClose={() => {
+          setShowSimulation(false);
+          clearSimulationOverlay();
+        }}
+        architectureId={projectId}
+        nodes={nodes}
+        edges={edges}
+        onSimulationComplete={handleSimulationComplete}
+      />
+
+      <AiAssistPanel
+        isOpen={showAiAssist}
+        onClose={() => setShowAiAssist(false)}
+        onArchitectureGenerated={handleArchitectureGenerated}
       />
 
       <UnsavedChangesModal

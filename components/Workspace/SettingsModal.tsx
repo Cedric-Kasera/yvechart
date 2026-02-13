@@ -443,17 +443,19 @@ export default function SettingsModal({
                   </span>
                 </div>
                 <span className="font-semibold text-primary-600">
-                  $29
+                  $4.99
                   <span className="text-xs text-gray-500 font-normal">/mo</span>
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-600 mb-4">
                 <span>✓ Unlimited projects</span>
-                <span>✓ Advanced AI features</span>
                 <span>✓ Unlimited workspaces</span>
+                <span>✓ Advanced AI features</span>
                 <span>✓ Priority support</span>
                 <span>✓ Team collaboration</span>
-                <span>✓ Custom exports</span>
+                <span>✓ Custom exports (SVG, PDF)</span>
+                <span>✓ Version history</span>
+                <span>✓ Custom Node Templates</span>
               </div>
               <button className="w-full px-4 py-2 bg-primary-500 text-white text-sm rounded-lg hover:bg-primary-600 transition-colors font-medium cursor-pointer">
                 Upgrade to Pro

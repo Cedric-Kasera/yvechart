@@ -9,6 +9,7 @@ interface IconNodeData {
   icon: string;
   configValues?: Record<string, string | number | boolean>;
   configFields?: ConfigField[];
+  simulationStatus?: "healthy" | "overloaded" | "failed";
   [key: string]: unknown;
 }
 
@@ -23,16 +24,41 @@ function formatValue(value: string | number | boolean): string {
 }
 
 export default function IconNode({ data, selected }: NodeProps) {
-  const { label, icon, configValues, configFields } = data as IconNodeData;
+  const { label, icon, configValues, configFields, simulationStatus } =
+    data as IconNodeData;
 
   const hasConfig = configFields && configFields.length > 0 && configValues;
 
+  // Determine border & ring styling based on simulation status
+  let borderClass = selected
+    ? "border-primary-500 shadow-md"
+    : "border-gray-200";
+  let statusIndicator: React.ReactNode = null;
+
+  if (simulationStatus === "overloaded") {
+    borderClass = "border-amber-500 ring-2 ring-amber-200 shadow-md";
+    statusIndicator = (
+      <span className="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full bg-amber-500 border-2 border-white" />
+    );
+  } else if (simulationStatus === "failed") {
+    borderClass = "border-red-500 ring-2 ring-red-200 shadow-md";
+    statusIndicator = (
+      <span className="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full bg-red-500 border-2 border-white" />
+    );
+  } else if (simulationStatus === "healthy") {
+    borderClass = selected
+      ? "border-primary-500 shadow-md"
+      : "border-emerald-400 ring-2 ring-emerald-100 shadow-sm";
+    statusIndicator = (
+      <span className="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white" />
+    );
+  }
+
   return (
     <div
-      className={`flex flex-col items-center gap-2 p-4 rounded-xl bg-white border-2 transition-colors shadow-sm min-w-20 ${
-        selected ? "border-primary-500 shadow-md" : "border-gray-200"
-      }`}
+      className={`relative flex flex-col items-center gap-2 p-4 rounded-xl bg-white border-2 transition-colors shadow-sm min-w-20 ${borderClass}`}
     >
+      {statusIndicator}
       <Handle
         type="target"
         position={Position.Top}
