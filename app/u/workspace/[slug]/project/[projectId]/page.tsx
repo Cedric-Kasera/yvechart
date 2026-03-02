@@ -87,6 +87,7 @@ function ProjectPageInner() {
             source: e.source,
             target: e.target,
             style: e.style,
+            type: e.type || "smoothstep",
           }));
 
           // Set node id counter past existing IDs to avoid collisions
@@ -145,16 +146,18 @@ function ProjectPageInner() {
   // Dialog state for node config
   const [dialogOpen, setDialogOpen] = useState(false);
   const [pendingNode, setPendingNode] = useState<{
+    id?: string;
     nodeType: string;
     label: string;
     icon: string;
     config: ConfigField[];
+    configValues?: Record<string, string | number | boolean>;
     position: { x: number; y: number };
   } | null>(null);
 
   const onConnect = useCallback(
     (connection: Connection) => {
-      setEdges((eds) => addEdge(connection, eds));
+      setEdges((eds) => addEdge({ ...connection, type: "smoothstep" }, eds));
     },
     [setEdges],
   );
@@ -187,23 +190,58 @@ function ProjectPageInner() {
     [screenToFlowPosition],
   );
 
-  const handleDialogAdd = useCallback(
-    (configValues: Record<string, string | number | boolean>) => {
+  const onNodeDoubleClick = useCallback((event: React.MouseEvent, node: Node) => {
+    const nodeMeta = getNodeById(node.type === "icon" && node.data.icon ? (node.data.icon as string) : node.type || "icon");
+    const config = (node.data.configFields as ConfigField[]) || nodeMeta?.config || [];
+
+    setPendingNode({
+      id: node.id,
+      nodeType: node.type || "icon",
+      label: (node.data.label as string) || (node.data.icon as string) || "Node",
+      icon: (node.data.icon as string) || "",
+      config,
+      configValues: (node.data.configValues as Record<string, any>) || {},
+      position: node.position
+    });
+    setDialogOpen(true);
+  }, []);
+
+  const handleDialogSave = useCallback(
+    (name: string, configValues: Record<string, string | number | boolean>) => {
       if (!pendingNode) return;
 
-      const newNode: Node = {
-        id: getId(),
-        type: "icon",
-        position: pendingNode.position,
-        data: {
-          label: pendingNode.label || pendingNode.nodeType,
-          icon: pendingNode.icon || "",
-          configValues,
-          configFields: pendingNode.config,
-        },
-      };
+      if (pendingNode.id) {
+        // Update existing node
+        setNodes((nds) =>
+          nds.map((n) =>
+            n.id === pendingNode.id
+              ? {
+                ...n,
+                data: {
+                  ...n.data,
+                  label: name,
+                  configValues,
+                },
+              }
+              : n
+          )
+        );
+      } else {
+        // Create new node
+        const newNode: Node = {
+          id: getId(),
+          type: "icon",
+          position: pendingNode.position,
+          data: {
+            label: name,
+            icon: pendingNode.icon || "",
+            configValues,
+            configFields: pendingNode.config,
+          },
+        };
 
-      setNodes((nds) => [...nds, newNode]);
+        setNodes((nds) => [...nds, newNode]);
+      }
       setDialogOpen(false);
       setPendingNode(null);
     },
@@ -289,11 +327,18 @@ function ProjectPageInner() {
           return node;
         }),
       );
+
+      setEdges((prev) =>
+        prev.map((edge) => ({
+          ...edge,
+          animated: true,
+          style: { ...edge.style, strokeDasharray: "5 5" },
+        }))
+      );
     },
-    [setNodes],
+    [setNodes, setEdges],
   );
 
-  /** Clear simulation overlay from canvas nodes */
   const clearSimulationOverlay = useCallback(() => {
     setNodes((prev) =>
       prev.map((node) => {
@@ -304,7 +349,20 @@ function ProjectPageInner() {
         return node;
       }),
     );
-  }, [setNodes]);
+
+    setEdges((prev) =>
+      prev.map((edge) => {
+        const newStyle = { ...edge.style };
+        delete newStyle.strokeDasharray;
+
+        return {
+          ...edge,
+          animated: false,
+          style: newStyle,
+        };
+      })
+    );
+  }, [setNodes, setEdges]);
 
   const handleAIChat = () => {
     setShowAiAssist(true);
@@ -375,6 +433,7 @@ function ProjectPageInner() {
           onConnect={onConnect}
           onDrop={onDrop}
           onDragOver={onDragOver}
+          onNodeDoubleClick={onNodeDoubleClick}
           reactFlowRef={reactFlowRef}
         />
       </div>
@@ -382,10 +441,11 @@ function ProjectPageInner() {
       <NodeConfigDialog
         open={dialogOpen}
         onClose={handleDialogClose}
-        onAdd={handleDialogAdd}
+        onSave={handleDialogSave}
         nodeName={pendingNode?.label || ""}
         nodeIcon={pendingNode?.icon || ""}
         config={pendingNode?.config || []}
+        initialValues={pendingNode?.configValues}
       />
 
       <SimulationPanel

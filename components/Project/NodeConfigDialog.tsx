@@ -15,40 +15,49 @@ import type { ConfigField } from "@/lib/nodes";
 interface NodeConfigDialogProps {
   open: boolean;
   onClose: () => void;
-  onAdd: (configValues: Record<string, string | number | boolean>) => void;
+  onSave: (name: string, configValues: Record<string, string | number | boolean>) => void;
   nodeName: string;
   nodeIcon: string;
   config: ConfigField[];
+  initialValues?: Record<string, string | number | boolean>;
 }
 
 export default function NodeConfigDialog({
   open,
   onClose,
-  onAdd,
+  onSave,
   nodeName,
   nodeIcon,
   config,
+  initialValues,
 }: NodeConfigDialogProps) {
+  const [name, setName] = useState(nodeName);
   const [values, setValues] = useState<
     Record<string, string | number | boolean>
   >({});
 
   useEffect(() => {
     if (open) {
-      const defaults: Record<string, string | number | boolean> = {};
-      config.forEach((field) => {
-        defaults[field.key] = field.defaultValue;
-      });
-      setValues(defaults);
+      setName(nodeName);
+      if (initialValues && Object.keys(initialValues).length > 0) {
+        setValues(initialValues);
+      } else {
+        const defaults: Record<string, string | number | boolean> = {};
+        config.forEach((field) => {
+          defaults[field.key] = field.defaultValue;
+        });
+        setValues(defaults);
+      }
     }
-  }, [open, config]);
+  }, [open, nodeName, config, initialValues]);
 
   const handleChange = (key: string, value: string | number | boolean) => {
     setValues((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleAdd = () => {
-    onAdd(values);
+  const handleSave = () => {
+    if (!name.trim()) return;
+    onSave(name.trim(), values);
   };
 
   return (
@@ -70,63 +79,81 @@ export default function NodeConfigDialog({
           </div>
         </DialogHeader>
 
-        {config.length > 0 && (
-          <div className="space-y-3 max-h-72 overflow-y-auto py-2">
-            {config.map((field) => (
-              <div key={field.key} className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">
-                  {field.label}
-                  {field.unit && (
-                    <span className="text-gray-400 ml-1">({field.unit})</span>
-                  )}
-                </label>
-
-                {field.type === "boolean" ? (
-                  <button
-                    type="button"
-                    onClick={() => handleChange(field.key, !values[field.key])}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-                      values[field.key] ? "bg-primary-500" : "bg-gray-200"
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm ring-0 transition-transform ${
-                        values[field.key] ? "translate-x-5" : "translate-x-0"
-                      }`}
-                    />
-                  </button>
-                ) : field.type === "number" ? (
-                  <input
-                    type="number"
-                    value={values[field.key] as number}
-                    onChange={(e) =>
-                      handleChange(
-                        field.key,
-                        e.target.value === "" ? 0 : parseFloat(e.target.value),
-                      )
-                    }
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
-                  />
-                ) : (
-                  <input
-                    type="text"
-                    value={values[field.key] as string}
-                    onChange={(e) => handleChange(field.key, e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
-                  />
-                )}
-              </div>
-            ))}
+        <div className="space-y-4 max-h-[60vh] overflow-y-auto p-1">
+          {/* Node Name Input */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-gray-700">
+              Node Name
+            </label>
+            <input
+              type="text"
+              value={name}
+              placeholder="e.g. My Database"
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all shadow-sm"
+            />
           </div>
-        )}
 
-        {config.length === 0 && (
-          <p className="text-sm text-gray-500 py-4 text-center">
-            No configuration settings for this node.
-          </p>
-        )}
+          {config.length > 0 && (
+            <>
+              <div className="h-px bg-gray-100 my-2" />
+              <div className="space-y-3">
+                <h4 className="text-xs font-semibold text-gray-700">Configuration</h4>
+                {config.map((field) => (
+                  <div key={field.key} className="flex flex-col gap-1.5">
+                    <label className="text-xs font-medium text-gray-600">
+                      {field.label}
+                      {field.unit && (
+                        <span className="text-gray-400 ml-1">({field.unit})</span>
+                      )}
+                    </label>
 
-        <DialogFooter className="gap-2 sm:gap-2">
+                    {field.type === "boolean" ? (
+                      <button
+                        type="button"
+                        onClick={() => handleChange(field.key, !values[field.key])}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${values[field.key] ? "bg-primary-500" : "bg-gray-200"
+                          }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm ring-0 transition-transform ${values[field.key] ? "translate-x-5" : "translate-x-0"
+                            }`}
+                        />
+                      </button>
+                    ) : field.type === "number" ? (
+                      <input
+                        type="number"
+                        value={values[field.key] as number}
+                        onChange={(e) =>
+                          handleChange(
+                            field.key,
+                            e.target.value === "" ? 0 : parseFloat(e.target.value),
+                          )
+                        }
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+                      />
+                    ) : (
+                      <input
+                        type="text"
+                        value={values[field.key] as string}
+                        onChange={(e) => handleChange(field.key, e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {config.length === 0 && (
+            <p className="text-sm text-gray-500 pt-4 pb-2 text-center italic">
+              No additional configuration settings are available for this node type.
+            </p>
+          )}
+        </div>
+
+        <DialogFooter className="gap-2 sm:gap-2 pt-2 border-t border-gray-100">
           <Button
             variant="outline"
             onClick={onClose}
@@ -135,10 +162,11 @@ export default function NodeConfigDialog({
             Cancel
           </Button>
           <Button
-            onClick={handleAdd}
+            onClick={handleSave}
+            disabled={!name.trim()}
             className="bg-primary-500 hover:bg-primary-600 text-white cursor-pointer"
           >
-            Add
+            Save
           </Button>
         </DialogFooter>
       </DialogContent>

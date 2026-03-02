@@ -34,6 +34,7 @@ interface ProjectCanvasProps {
   onNodesChange: ReturnType<typeof useNodesState>[1];
   onEdgesChange: ReturnType<typeof useEdgesState>[1];
   onConnect: (connection: Connection) => void;
+  onNodeDoubleClick?: (event: React.MouseEvent, node: Node) => void;
   reactFlowRef: React.RefObject<HTMLDivElement | null>;
 }
 
@@ -45,6 +46,7 @@ export default function ProjectCanvas({
   onConnect,
   onDrop,
   onDragOver,
+  onNodeDoubleClick,
   reactFlowRef,
 }: ProjectCanvasProps) {
   const handleNodesChange = useCallback(
@@ -72,7 +74,9 @@ export default function ProjectCanvas({
         onConnect={onConnect}
         onDrop={onDrop}
         onDragOver={onDragOver}
+        onNodeDoubleClick={onNodeDoubleClick}
         defaultEdgeOptions={{
+          type: "smoothstep",
           style: { stroke: "#374151", strokeWidth: 2 },
         }}
         fitView

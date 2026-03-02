@@ -22,6 +22,11 @@ export interface NodeInstance {
     // Populated during simulation (initialized by frontend)
     incoming_rps: number;
     status: 'healthy' | 'overloaded' | 'failed';
+
+    // Advanced Strategy Properties
+    cache_hit_rate?: number;
+    read_write_ratio?: number;
+    is_async_queue?: boolean;
 }
 
 /**
@@ -30,6 +35,9 @@ export interface NodeInstance {
 export interface SimulationEdge {
     source: string;
     target: string;
+    weight?: number;
+    is_async?: boolean;
+    network_latency_ms?: number;
 }
 
 /**
@@ -86,6 +94,8 @@ export interface SimulationNodeResult {
     utilization_percent: number;
     latency_ms: number;
     cost_per_hour: number;
+    error_rate?: number;
+    dropped_requests?: number;
 }
 
 export interface Bottleneck {

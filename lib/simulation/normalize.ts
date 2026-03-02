@@ -8,6 +8,9 @@ import {
     FALLBACK_LATENCY,
     FALLBACK_MAX_RPS,
     FALLBACK_COST,
+    DEFAULT_CACHE_HIT_RATE,
+    ASYNC_QUEUE_TYPES,
+    NETWORK_LATENCY,
 } from './defaults';
 
 // =====================
@@ -77,6 +80,11 @@ export function normalizeNode(canvasNode: Node): NodeInstance {
     // 5. cost_per_hour — no nodes define this, always from defaults
     const cost_per_hour = DEFAULT_COST[nodeType] ?? FALLBACK_COST;
 
+    // 6. Advanced properties
+    const cache_hit_rate = DEFAULT_CACHE_HIT_RATE[nodeType] ?? 0;
+    const is_async_queue = ASYNC_QUEUE_TYPES.includes(nodeType);
+    const read_write_ratio = 1;
+
     const data = canvasNode.data as Record<string, unknown>;
 
     return {
@@ -90,6 +98,9 @@ export function normalizeNode(canvasNode: Node): NodeInstance {
         cost_per_hour,
         incoming_rps: 0,
         status: 'healthy',
+        cache_hit_rate,
+        is_async_queue,
+        read_write_ratio,
     };
 }
 
@@ -101,10 +112,22 @@ export function normalizeNode(canvasNode: Node): NodeInstance {
  * Extracts the minimal source/target representation from React Flow edges.
  */
 export function normalizeEdges(canvasEdges: Edge[]): SimulationEdge[] {
-    return canvasEdges.map((edge) => ({
-        source: edge.source,
-        target: edge.target,
-    }));
+    return canvasEdges.map((edge) => {
+        const data = edge.data || {};
+        const weight = typeof data.weight === 'number' ? data.weight : 1;
+        const is_async = typeof data.is_async === 'boolean' ? data.is_async : false;
+        const network_latency_ms = typeof data.network_latency_ms === 'number'
+            ? data.network_latency_ms
+            : NETWORK_LATENCY['local_vpc'];
+
+        return {
+            source: edge.source,
+            target: edge.target,
+            weight,
+            is_async,
+            network_latency_ms,
+        };
+    });
 }
 
 // =====================
